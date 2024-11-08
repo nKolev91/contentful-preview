@@ -1,105 +1,68 @@
-import Link from "next/link";
-import { draftMode } from "next/headers";
+import { BlogProps, getAllBlogs } from '@/lib/contentful/api';
+import { draftMode } from 'next/headers';
+import Image from 'next/image';
+import Link from 'next/link';
 
-import Date from "./date";
-import CoverImage from "./cover-image";
-import Avatar from "./avatar";
-import MoreStories from "./more-stories";
-
-import { getAllPosts } from "@/lib/api";
-import { CMS_NAME, CMS_URL } from "@/lib/constants";
-
-function Intro() {
-  return (
-    <section className="flex-col md:flex-row flex items-center md:justify-between mt-16 mb-16 md:mb-12">
-      <h1 className="text-6xl md:text-8xl font-bold tracking-tighter leading-tight md:pr-8">
-        Blog.
-      </h1>
-      <h2 className="text-center md:text-left text-lg mt-5 md:pl-8">
-        A statically generated blog example using{" "}
-        <a
-          href="https://nextjs.org/"
-          className="underline hover:text-success duration-200 transition-colors"
-        >
-          Next.js
-        </a>{" "}
-        and{" "}
-        <a
-          href={CMS_URL}
-          className="underline hover:text-success duration-200 transition-colors"
-        >
-          {CMS_NAME}
-        </a>
-        .
-      </h2>
-    </section>
-  );
-}
-
-function HeroPost({
-  title,
-  coverImage,
-  date,
-  excerpt,
-  author,
-  slug,
-}: {
-  title: string;
-  coverImage: any;
-  date: string;
-  excerpt: string;
-  author: any;
-  slug: string;
-}) {
-  return (
-    <section>
-      {coverImage &&
-        <div className="mb-8 md:mb-16">
-          <CoverImage title={title} slug={slug} url={coverImage.url} />
-        </div>
-      }
-      <div className="md:grid md:grid-cols-2 md:gap-x-16 lg:gap-x-8 mb-20 md:mb-28">
-        <div>
-          <h3 className="mb-4 text-4xl lg:text-6xl leading-tight">
-            <Link href={`/posts/${slug}`} className="hover:underline">
-              {title}
-            </Link>
-          </h3>
-          {date &&
-            <div className="mb-4 md:mb-0 text-lg">
-              <Date dateString={date} />
-            </div>
-          }
-        </div>
-        <div>
-          <p className="text-lg leading-relaxed mb-4">{excerpt}</p>
-          {author && <Avatar name={author.name} picture={author.picture} />}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-export default async function Page() {
+export default async function Home() {
   const { isEnabled } = draftMode();
-  const allPosts = await getAllPosts(isEnabled);
-  const heroPost = allPosts[0];
-  const morePosts = allPosts.slice(1);
+  const blogs = await getAllBlogs(3, isEnabled);
 
   return (
-    <div className="container mx-auto px-5">
-      <Intro />
-      {heroPost && (
-        <HeroPost
-          title={heroPost.title}
-          coverImage={heroPost.coverImage}
-          date={heroPost.date}
-          author={heroPost.author}
-          slug={heroPost.slug}
-          excerpt={heroPost.excerpt}
-        />
-      )}
-      <MoreStories morePosts={morePosts} />
-    </div>
+    <main className="flex min-h-screen flex-col items-center justify-between p-24 bg-white">
+      <section className="w-full pt-12">
+        <div className="mx-auto container space-y-12 px-4 md:px-6">
+          <div className="flex flex-col items-center justify-center space-y-4 text-center">
+            <div className="space-y-2">
+              <h1 className="text-3xl font-bold tracking-tighter sm:text-5xl">
+                Welcome to our Knowledge Base
+              </h1>
+              <p className="max-w-[900px] text-zinc-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-zinc-400">
+                Discover our latest blogs and stay up to date with the newest technologies,
+                features, and trends.
+              </p>
+            </div>
+          </div>
+          <div className="space-y-12">
+            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+              {blogs.map((blog: BlogProps) => (
+                <article
+                  key={blog.sys.id}
+                  className="h-full flex flex-col rounded-lg shadow-lg overflow-hidden"
+                >
+                  <Image
+                    alt="placeholder"
+                    className="aspect-[4/3] object-cover w-full"
+                    height="263"
+                    src={blog?.featuredImage?.url ?? ''}
+                    width="350"
+                  />
+                  <div className="flex-1 p-6">
+                    <Link href={`/blogs/${blog.slug}`}>
+                      <h3 className="text-2xl font-bold leading-tight text-zinc-900 dark:text-zinc-50  py-4">
+                        {blog.title}
+                      </h3>
+                    </Link>
+                    <p className="max-w-none text-zinc-500 mt-4 mb-2 text-sm dark:text-zinc-400">
+                      {blog.shortDescription}
+                    </p>
+                    <p className="max-w-none text-zinc-600 mt-2 mb-2 text-sm font-bold dark:text-zinc-400">
+                      Written by: {blog.author.name}
+                    </p>
+                    <div className="flex justify-end">
+                      <Link
+                        className="inline-flex h-10 items-center justify-center text-sm font-medium"
+                        href={`/blogs/${blog.slug}`}
+                      >
+                        Read More →
+                      </Link>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
   );
 }
